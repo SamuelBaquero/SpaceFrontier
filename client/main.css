@@ -1,0 +1,10 @@
+/* CSS declarations go here */
+
+canvas {
+  display: block;
+  background-image: url('http://static3.businessinsider.com/image/55b675ab2acae7c7018ba34e-1200/milky-way-galaxy.jpg');
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
