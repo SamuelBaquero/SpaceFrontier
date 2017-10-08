@@ -3,27 +3,27 @@ import Particle from './Particle';
 import { rotatePoint, randomNumBetween } from './helpers';
 
 export default class Ship {
-  constructor(args) {
+  constructor(args,r) {
     this.position = args.position
     this.velocity = {
       x: 0,
       y: 0
     }
     this.rotation = 0;
-    this.rotationSpeed = 6;
-    this.speed = 0.15;
-    this.inertia = 0.99;
-    this.radius = 20;
+    this.rotationSpeed = 7;
+    this.speed = 0.26;
+    this.inertia = 0.96;
+    this.radius = 10;
     this.lastShot = 0;
-    this.create = args.create;
-    this.onDie = args.onDie;
+    //this.create = args.create;
+    //this.onDie = args.onDie;
   }
 
   destroy(){
     this.delete = true;
-    this.onDie();
+    //this.onDie();
 
-    // Explode
+   //Efecto explosivo   
     for (let i = 0; i < 60; i++) {
       const particle = new Particle({
         lifeSpan: randomNumBetween(60, 100),
@@ -37,7 +37,7 @@ export default class Ship {
           y: randomNumBetween(-1.5, 1.5)
         }
       });
-      this.create(particle, 'particles');
+      //this.create(particle, 'particles');
     }
   }
 
@@ -50,71 +50,56 @@ export default class Ship {
     }
   }
 
-  accelerate(val){
-    this.velocity.x -= Math.sin(-this.rotation*Math.PI/180) * this.speed;
-    this.velocity.y -= Math.cos(-this.rotation*Math.PI/180) * this.speed;
+  accelerate(val,state){
+    this.velocity.x -= this.speed * Math.sin(-this.rotation*Math.PI/180);
+    this.velocity.y -= this.speed * Math.cos(-this.rotation*Math.PI/180);
+    this.reform(state);
 
-    // Thruster particles
-    let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
-    const particle = new Particle({
-      lifeSpan: randomNumBetween(20, 40),
-      size: randomNumBetween(1, 3),
-      position: {
-        x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
-        y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
-      },
-      velocity: {
-        x: posDelta.x / randomNumBetween(3, 5),
-        y: posDelta.y / randomNumBetween(3, 5)
-      }
-    });
-    this.create(particle, 'particles');
+    // let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
+    // const particle = new Particle({
+    //   lifeSpan: randomNumBetween(20, 40),
+    //   size: randomNumBetween(1, 3),
+    //   position: {
+    //     x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
+    //     y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
+    //   },
+    //   velocity: {
+    //     x: posDelta.x / randomNumBetween(3, 5),
+    //     y: posDelta.y / randomNumBetween(3, 5)
+    //   }
+    // });
+    // this.create(particle, 'particles');
   }
-
-  render(state){
-    // Controls
-    if(state.keys.up){
-      this.accelerate(1);
-    }
-    if(state.keys.left){
-      this.rotate('LEFT');
-    }
-    if(state.keys.right){
-      this.rotate('RIGHT');
-    }
-    if(state.keys.space && Date.now() - this.lastShot > 300){
-      const bullet = new Bullet({ship: this});
-      this.create(bullet, 'bullets');
-      this.lastShot = Date.now();
-    }
-
-    // Move
+  reform(state){
+      // Move
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
     this.velocity.x *= this.inertia;
     this.velocity.y *= this.inertia;
 
-    // Rotation
+     // Rotation
     if (this.rotation >= 360) {
       this.rotation -= 360;
     }
     if (this.rotation < 0) {
       this.rotation += 360;
     }
-
     // Screen edges
     if(this.position.x > state.screen.width) this.position.x = 0;
     else if(this.position.x < 0) this.position.x = state.screen.width;
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
+  }
 
+  render(scontext){
+   
     // Draw
-    const context = state.context;
+    const context = scontext;
     context.save();
     context.translate(this.position.x, this.position.y);
     context.rotate(this.rotation * Math.PI / 180);
-    context.strokeStyle = '#ffffff';
-    context.fillStyle = '#000000';
+    context.strokeStyle = '#ef5350';
+    context.fillStyle = '#ef5350';
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(0, -15);
