@@ -13,6 +13,9 @@ import {Principal} from './Principal.jsx';
 //Collections players
 import {Players} from '../api/players.js';
 import {Shipsdb} from '../api/shipsdb.js';
+import {ParticlesDB} from '../api/particles.js';
+import {AsteroidsDB} from '../api/asteroids.js';
+
 
 // App component - represents the whole app
 class App extends Component {
@@ -38,9 +41,12 @@ class App extends Component {
         this.onEnterPlayer = this.onEnterPlayer.bind(this);
         this.movePlayer = this.movePlayer.bind(this);
         this.crearShip = this.crearShip.bind(this);
+        this.crearParticula = this.crearParticula.bind(this);
         this.updateShip = this.updateShip.bind(this);
         this.selectionSingle = this.selectionSingle.bind(this);
         this.selectionMultiplayer = this.selectionMultiplayer.bind(this);
+        this.deleteParticle = this.deleteParticle.bind(this);
+        this.crearAsteroide = this.crearAsteroide.bind(this);
     }
     
     crearShip(item){
@@ -48,6 +54,12 @@ class App extends Component {
         this.setState({
             currentID:item._id
         })
+    }
+    crearParticula(item){
+        ParticlesDB.insert(item);
+    }
+    crearAsteroide(item){
+        AsteroidsDB.insert(item);
     }
     selectionSingle(){
         this.setState({
@@ -71,6 +83,30 @@ class App extends Component {
         r: Nr,
         id:idN
         });
+    }
+    updateParticle(life,sz,p,v,id){
+        ParticlesDB.update(id,
+            {
+            lifeSpan: life,
+            size: sz,
+            position: p,
+            velocity: v
+        });
+    }
+    updateAsteroid(a,id){
+        AsteroidsDB.update(id,{
+        owner:a.owner,
+        position: a.position,
+        velocity : a.velocity,
+          rotation : a.rotation,
+          rotationSpeed : a.rotationSpeed,
+          radius : a.radius,
+          score : a.score,
+          vertices : a.vertices
+        });
+    }
+    deleteParticle(id){
+        ParticlesDB.remove(id);
     }
     
     onEnterPlayer(name,pass) {
@@ -164,6 +200,14 @@ class App extends Component {
                     cShip={this.crearShip}
                     ships={this.props.shiplist}
                     uShip={this.updateShip}
+                    currentShipID={this.state.currentID}
+                    cParticle={this.crearParticula}
+                    particles={this.props.particlesList}
+                    uParticle={this.updateParticle}
+                    dParticle={this.deleteParticle}
+                    cAsteroid={this.crearAsteroide}
+                    asteroids={this.props.asteroidsList}
+                    uAsteroid={this.updateAsteroid}
                     />
             </div>
                 )
@@ -186,6 +230,8 @@ export default createContainer(() => {
     return {
         //variable reactiva que se actualiza con cada cambio
         players: Players.find({}).fetch(),
-        shiplist:Shipsdb.find({}).fetch()
+        shiplist:Shipsdb.find({}).fetch(),
+        particlesList:ParticlesDB.find({}).fetch(),
+        asteroidsList:AsteroidsDB.find({}).fetch()
     };
 }, App);

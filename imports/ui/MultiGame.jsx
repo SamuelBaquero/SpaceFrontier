@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Ship from '../sketches/Ship.js';
 import OwnShip from '../sketches/OwnShip.js'
 import Asteroid from '../sketches/Asteroids.js';
-import { randomNumBetweenExcluding } from '../sketches/helpers.js'
+import {asteroidVertices, randomNumBetweenExcluding, rotatePoint, randomNumBetween } from '../sketches/helpers.js'
 
 const KEY = {
   A: 65,
@@ -27,11 +27,12 @@ export class MultiGame extends Component {
         up    : 0,
         space : 0,
       },
-      asteroidCount: 3,
+      asteroidCount: 1,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
       inGame: false,
-      currentID:0
+      currentID:0,
+      currentIDA:0,
     }
     this.ownShip={
         velocity : {
@@ -61,6 +62,14 @@ export class MultiGame extends Component {
     this.rotateShip=this.rotateShip.bind(this);
     this.checkMoveShip=this.checkMoveShip.bind(this);
     this.guidGenerator=this.guidGenerator.bind(this);
+    this.pintarParticula=this.pintarParticula.bind(this);
+    this.createParticleDB=this.createParticleDB.bind(this);
+    this.updateParticles=this.updateParticles.bind(this);
+    this.checkMoveParticle=this.checkMoveParticle.bind(this);
+    this.createAsteroid=this.createAsteroid.bind(this);
+    this.updateAsteroids=this.updateAsteroids.bind(this);
+    this.postMovAsteroid=this.postMovAsteroid.bind(this);
+    this.pintarAsteroide=this.pintarAsteroide.bind(this);
   }
  guidGenerator() {
     var S4 = function() {
@@ -121,7 +130,7 @@ export class MultiGame extends Component {
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
 
-    // // Next set of asteroids
+    // Next set of asteroids
     // if(!this.asteroids.length){
     //   let count = this.state.asteroidCount + 1;
     //   this.setState({ asteroidCount: count });
@@ -137,7 +146,10 @@ export class MultiGame extends Component {
     // this.updateObjects(this.asteroids, 'asteroids')
     // this.updateObjects(this.bullets, 'bullets')
     // this.updateObjects(this.ship, 'ship')
+   
     this.updateShips();
+    this.updateAsteroids();
+    //this.updateParticles();
 
     context.restore();
 
@@ -177,13 +189,13 @@ export class MultiGame extends Component {
     // console.log('x inicial:',xN);
     // console.log('y inicial:',yN);
 
-    let ship = new Ship({
-      position: {
-        x: xN,
-        y: yN,
-      } ,create: this.createObject.bind(this),
-        onDie: this.gameOver.bind(this)
-    });
+    // let ship = new Ship({
+    //   position: {
+    //     x: xN,
+    //     y: yN,
+    //   } ,create: this.createObject.bind(this),
+    //     onDie: this.gameOver.bind(this)
+    // });
     //this.createObject(ship, 'ship');
     this.createShipDB(own);
     this.ownShip.position.x=xN;
@@ -193,17 +205,26 @@ export class MultiGame extends Component {
     this.acelerateShip()
     // Make asteroids
     // this.asteroids = [];
-    // this.generateAsteroids(this.state.asteroidCount)
+    this.generateAsteroids(this.state.asteroidCount)
   }
+
+  //Creation Methods
+
   createShipDB(own){
      this.props.cShip(own);      
+  }
+    createParticleDB(p){
+    this.props.cParticle(p);
+  }
+  createAsteroid(a){
+    this.props.cAsteroid(a);
   }
   updateShips(){
     this.checkMoveShip();
     this.props.uShip(this.ownShip.position.x,this.ownShip.position.y,this.ownShip.rotation,this.state.currentID);
     this.props.ships.map((s)=>{
         if(s.id == this.state.currentID){
-            console.log("true")
+            // console.log("true")
             this.pintarShip(s.x,s.y,s.r,true);
         }else{
             this.pintarShip(s.x,s.y,s.r,false);
@@ -212,6 +233,36 @@ export class MultiGame extends Component {
         
     })
   }
+updateParticles(){
+    this.props.particles.map((p)=>{
+      // console.log('llegan particulas')
+      this.checkMoveParticle(p);
+      if(p.delete)
+        {
+          this.props.dParticle(p._id);
+        }else{
+        this.props.uParticle(p.lifeSpan,p.size,p.position,p.velocity,p._id);
+        this.pintarParticula(p.position.x,p.position.y,p.radius);
+        }
+        
+    })
+}
+  updateAsteroids(){
+    
+    this.props.asteroids.map((a)=>{
+      if(a.owner==this.state.currentIDA)
+        {
+          // console.log('es Igual')
+          let aN = this.postMovAsteroid(a);
+          this.props.uAsteroid(aN,aN._id);
+          this.pintarAsteroide(aN.position.x,aN.positiony,aN.rotation,aN.radius,aN.vertices);
+        }else{
+          this.pintarAsteroide(a.position.x,a.positiony,a.rotation,a.radius,a.vertices);
+        }
+      
+    })
+  }
+
 checkMoveShip(){
     // Controls
     if(this.state.keys.up){
@@ -229,26 +280,43 @@ checkMoveShip(){
     //   this.lastShot = Date.now();
     // }
   }
+checkMoveParticle(p){
+    // Move
+    p.position.x += p.velocity.x;
+    p.position.y += p.velocity.y;
+    p.velocity.x *= p.inertia;
+    p.velocity.y *= p.inertia;
+
+    // Shrink
+    p.radius -= 0.1;
+    if(p.radius < 0.1) {
+      p.radius = 0.1;
+    }
+    if(p.lifeSpan-- < 0){
+        p.delete=true;
+    }
+}
 
   acelerateShip(val){
       
     this.ownShip.velocity.x -= Math.sin(-this.ownShip.rotation*Math.PI/180) * this.ownShip.speed;
     this.ownShip.velocity.y -= Math.cos(-this.ownShip.rotation*Math.PI/180) * this.ownShip.speed;
     // Thruster particles
-    // let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
-    // const particle = new Particle({
+    // let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.ownShip.rotation-180) * Math.PI / 180);
+    // let ownP ={
     //   lifeSpan: randomNumBetween(20, 40),
     //   size: randomNumBetween(1, 3),
     //   position: {
-    //     x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
-    //     y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
+    //     x: this.ownShip.position.x + posDelta.x + randomNumBetween(-2, 2),
+    //     y: this.ownShip.position.y + posDelta.y + randomNumBetween(-2, 2)
     //   },
     //   velocity: {
     //     x: posDelta.x / randomNumBetween(3, 5),
     //     y: posDelta.y / randomNumBetween(3, 5)
     //   }
-    // });
-    // this.create(particle, 'particles');
+    // };
+    //this.create(particle, 'particles');
+    //this.createParticleDB(ownP);
     this.postMovShip();
     // console.log(this.ownShip);
   }
@@ -284,6 +352,28 @@ postMovShip(){
     if(this.ownShip.position.y > this.state.screen.height) this.ownShip.position.y = 0;
     else if(this.ownShip.position.y < 0) this.ownShip.position.y = this.state.screen.height;
 }
+  postMovAsteroid(a){
+    // Move
+    a.position.x += a.velocity.x;
+    a.position.y += a.velocity.y;
+
+    // Rotation
+    a.rotation += a.rotationSpeed;
+    if (a.rotation >= 360) {
+      a.rotation -= 360;
+    }
+    if (a.rotation < 0) {
+      a.rotation += 360;
+    }
+
+    // Screen edges
+    if(a.position.x > this.state.screen.width + a.radius) a.position.x = -a.radius;
+    else if(a.position.x < -a.radius) a.position.x = this.state.screen.width + a.radius;
+    if(a.position.y > this.state.screen.height + a.radius) a.position.y = -a.radius;
+    else if(a.position.y < -a.radius) a.position.y = this.state.screen.height + a.radius;
+
+    return a;
+  }
 
   gameOver(){
     this.setState({
@@ -300,19 +390,31 @@ postMovShip(){
   }
 
   generateAsteroids(howMany){
-    let asteroids = [];
-    let ship = this.ship[0];
+    
     for (let i = 0; i < howMany; i++) {
-      let asteroid = new Asteroid({
-        size: 80,
+      console.log('id actual',this.state.currentID)
+      let idN = this.guidGenerator();
+            console.log('idgenerado',idN);
+            this.setState({
+                currentIDA:idN
+            })
+      let asteroid =
+      { owner:idN,
         position: {
-          x: randomNumBetweenExcluding(0, this.state.screen.width, ship.position.x-60, ship.position.x+60),
-          y: randomNumBetweenExcluding(0, this.state.screen.height, ship.position.y-60, ship.position.y+60)
+          x: Math.random() * this.state.screen.width,
+          y: Math.random() * this.state.screen.height,
         },
-        create: this.createObject.bind(this),
-        addScore: this.addScore.bind(this)
-      });
-      this.createObject(asteroid, 'asteroids');
+        velocity : {
+          x: randomNumBetween(-1.5, 1.5),
+          y: randomNumBetween(-1.5, 1.5)
+           },
+          rotation : 0,
+          rotationSpeed : randomNumBetween(-1, 1),
+          radius : 80,
+          score : (80/80)*5,
+          vertices : asteroidVertices(8, 80)
+      }
+      this.createAsteroid(asteroid);
     }
   }
 
@@ -387,6 +489,39 @@ postMovShip(){
     context.lineTo(-10, 10);
     context.closePath();
     context.fill();
+    context.stroke();
+    context.restore();
+  }
+
+  pintarParticula(x,y,r){
+    console.log("entra a pintar")
+    // Draw
+    const context = this.state.context;
+    context.save();
+    context.translate(x,y);
+    context.fillStyle = '#ff9800';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -r);
+    context.arc(0, 0, r, 0, 2 * Math.PI);
+    context.closePath();
+    context.fill();
+    context.restore();
+  }
+  pintarAsteroide(x,y,rot,rad,ver){
+    // Draw
+    const context = this.state.context;
+    context.save();
+    context.translate(x,y);
+    context.rotate(rot * Math.PI / 180);
+    context.strokeStyle = '#FFF';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -rad);
+    for (let i = 1; i < ver.length; i++) {
+      context.lineTo(ver[i].x, ver[i].y);
+    }
+    context.closePath();
     context.stroke();
     context.restore();
   }
