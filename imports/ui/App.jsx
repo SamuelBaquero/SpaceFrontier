@@ -121,6 +121,8 @@ class App extends Component {
         }
         //console.log('Jugador antes de insertar',player)
         player._id = Players.insert(player);
+        //Sin insecure esto se vería algo así:
+        Meteor.call('players.insert', player);
 
         this.setState({currentPlayer: player});
      
