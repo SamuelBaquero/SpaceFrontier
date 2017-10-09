@@ -55,20 +55,20 @@ export default class Ship {
     this.velocity.y -= Math.cos(-this.rotation*Math.PI/180) * this.speed;
 
     // Thruster particles
-    let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
-    const particle = new Particle({
-      lifeSpan: randomNumBetween(20, 40),
-      size: randomNumBetween(1, 3),
-      position: {
-        x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
-        y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
-      },
-      velocity: {
-        x: posDelta.x / randomNumBetween(3, 5),
-        y: posDelta.y / randomNumBetween(3, 5)
-      }
-    });
-    this.create(particle, 'particles');
+    // let posDelta = rotatePoint({x:0, y:-10}, {x:0,y:0}, (this.rotation-180) * Math.PI / 180);
+    // const particle = new Particle({
+    //   lifeSpan: randomNumBetween(20, 40),
+    //   size: randomNumBetween(1, 3),
+    //   position: {
+    //     x: this.position.x + posDelta.x + randomNumBetween(-2, 2),
+    //     y: this.position.y + posDelta.y + randomNumBetween(-2, 2)
+    //   },
+    //   velocity: {
+    //     x: posDelta.x / randomNumBetween(3, 5),
+    //     y: posDelta.y / randomNumBetween(3, 5)
+    //   }
+    // });
+    // this.create(particle, 'particles');
   }
 
   render(state){

@@ -180,8 +180,8 @@ getAccount(){
                     <div className="wrapper">
                     <div className="container">
                         <div className="form under">
-                            Sorry Man, this part is under Construction
-                            
+                            Sorry Man, this part is under Construction<br/>
+                             <button  onClick={this.onClickSingle.bind(this)}>Try Single Player</button>
                         </div>
                  </div>
 	        </div>

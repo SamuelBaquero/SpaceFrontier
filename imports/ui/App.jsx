@@ -7,6 +7,7 @@ import Board from './Board.jsx'
 import Controls from './Controls.jsx'
 import OwnShip from '../sketches/OwnShip.js';
 import {AloneG} from './AloneG.jsx';
+import {MultiGame} from './MultiGame.jsx';
 import {Principal} from './Principal.jsx';
 
 //Collections players
@@ -19,7 +20,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            enConstruccion:true,
+            enConstruccion:false,
             alone:false,
             multiplayer:false,
             players: [
@@ -29,7 +30,8 @@ class App extends Component {
                     y: 300,
                     r: 10
                 }
-            ]
+            ],
+            currentID:''
         }
         this.width = 900;
         this.height = 654;
@@ -42,8 +44,10 @@ class App extends Component {
     }
     
     crearShip(item){
-        console.log("crea ship")
         item._id=Shipsdb.insert(item);
+        this.setState({
+            currentID:item._id
+        })
     }
     selectionSingle(){
         this.setState({
@@ -60,8 +64,13 @@ class App extends Component {
             currentPlayer:''
         })
     }
-    updateShip(){
-
+    updateShip(Nx,Ny,Nr,idN){
+        Shipsdb.update(this.state.currentID, {
+        x: Nx,
+        y: Ny,
+        r: Nr,
+        id:idN
+        });
     }
     
     onEnterPlayer(name,pass) {
@@ -69,6 +78,7 @@ class App extends Component {
         console.log(name);
         let player = {
             name: name,
+            pass:pass,
             x: Math.random() * this.width,
             y: Math.random() * this.height,
             r: Math.random() * 360
@@ -132,16 +142,33 @@ class App extends Component {
     else if(this.state.currentPlayer && this.state.alone){
         menu = (
             <div>
-              <AloneG/>
+              <AloneG
+              />
           </div>
         )
     }else if(this.state.currentPlayer && this.state.multiplayer){
-        menu = (
-            <div>
-             <Principal onClick = {this.onEnterPlayer} 
-             under={this.state.enConstruccion}/>
-          </div>
-        )
+        if(this.state.enConstruccion)
+            {
+                    menu = (
+                            <div>
+                            <Principal onClick = {this.onEnterPlayer}
+                             single = {this.selectionSingle} 
+                            under={this.state.enConstruccion}/>
+                        </div>
+                            )
+            }
+            else{
+                menu = (
+                <div>
+                    <MultiGame
+                    cShip={this.crearShip}
+                    ships={this.props.shiplist}
+                    uShip={this.updateShip}
+                    />
+            </div>
+                )
+            }
+        
     }
         return (
 
