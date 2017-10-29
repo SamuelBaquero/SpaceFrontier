@@ -224,10 +224,10 @@ getAccount(){
               <div className="wrapper">
                     <div className="container">
                         <form className="form">
-                            <input type="text" placeholder="Username"/>
-                            <input type="password" placeholder="Password"/>
-                            <input type="password" placeholder="ReTypePassword"/>
-                            <button type="submit" id="login-button" onSubmit={this.onClick}>Create Account</button>
+                            <input type="text" onChange={this.handleUser.bind(this)} placeholder="Username"/>
+                            <input type="password" onChange ={this.handlePass.bind(this)} id = "password" placeholder="Password"/>
+                            <input type="password" id = "repassword" placeholder="ReTypePassword"/>
+                            <button type="submit" id="login-button" onSubmit={this.props.onClick()}>Create Account</button>
                         </form>
                         <a className="getAn" href="#"onClick={this.getAccount.bind(this)}> Already have an account ? </a>
                 </div>

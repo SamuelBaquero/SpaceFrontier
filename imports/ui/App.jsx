@@ -15,6 +15,7 @@ import {Players} from '../api/players.js';
 import {Shipsdb} from '../api/shipsdb.js';
 import {ParticlesDB} from '../api/particles.js';
 import {AsteroidsDB} from '../api/asteroids.js';
+import {BulletsDB} from '../api//bullets.js';
 
 
 // App component - represents the whole app
@@ -47,6 +48,7 @@ class App extends Component {
         this.selectionMultiplayer = this.selectionMultiplayer.bind(this);
         this.deleteParticle = this.deleteParticle.bind(this);
         this.crearAsteroide = this.crearAsteroide.bind(this);
+        this.crearBullet = this.crearBullet.bind(this);
     }
     
     crearShip(item){
@@ -60,6 +62,9 @@ class App extends Component {
     }
     crearAsteroide(item){
         AsteroidsDB.insert(item);
+    }
+    crearBullet(item){
+        BulletsDB.insert(item);
     }
     selectionSingle(){
         this.setState({
@@ -114,10 +119,9 @@ class App extends Component {
         console.log(name);
         let player = {
             name: name,
-            pass:pass,
-            x: Math.random() * this.width,
-            y: Math.random() * this.height,
-            r: Math.random() * 360
+            pass: pass,
+            score: 0
+            
         }
         //console.log('Jugador antes de insertar',player)
         player._id = Players.insert(player);
@@ -197,6 +201,7 @@ class App extends Component {
                 menu = (
                 <div>
                     <MultiGame
+                    players = {this.props.players}
                     cShip={this.crearShip}
                     ships={this.props.shiplist}
                     uShip={this.updateShip}
@@ -208,6 +213,8 @@ class App extends Component {
                     cAsteroid={this.crearAsteroide}
                     asteroids={this.props.asteroidsList}
                     uAsteroid={this.updateAsteroid}
+                    cBullet={this.crearBullet}
+                    bullets={this.props.bullets}
                     />
             </div>
                 )
@@ -229,9 +236,10 @@ App.propTypes = {
 export default createContainer(() => {
     return {
         //variable reactiva que se actualiza con cada cambio
-        players: Players.find({}).fetch(),
         shiplist:Shipsdb.find({}).fetch(),
         particlesList:ParticlesDB.find({}).fetch(),
-        asteroidsList:AsteroidsDB.find({}).fetch()
+        asteroidsList:AsteroidsDB.find({}).fetch(),
+        players:Players.find( {}, {sort: {score: -1} , limit:10} ).fetch(),
+        bullets:BulletsDB.find({}).fetch()
     };
 }, App);

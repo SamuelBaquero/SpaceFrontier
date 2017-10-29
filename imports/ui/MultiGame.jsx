@@ -3,7 +3,7 @@ import Ship from '../sketches/Ship.js';
 import OwnShip from '../sketches/OwnShip.js'
 import Asteroid from '../sketches/Asteroids.js';
 import {asteroidVertices, randomNumBetweenExcluding, rotatePoint, randomNumBetween } from '../sketches/helpers.js'
-
+import ScoreE from './ScoreE.jsx';
 const KEY = {
   A: 65,
   D: 68,
@@ -70,6 +70,9 @@ export class MultiGame extends Component {
     this.updateAsteroids=this.updateAsteroids.bind(this);
     this.postMovAsteroid=this.postMovAsteroid.bind(this);
     this.pintarAsteroide=this.pintarAsteroide.bind(this);
+    this.renderScores=this.renderScores.bind(this);
+    this.postMovBullet=this.postMovBullet.bind(this);
+    this.pintarBullet=this.pintarBullet.bind(this);
   }
  guidGenerator() {
     var S4 = function() {
@@ -103,7 +106,7 @@ export class MultiGame extends Component {
     window.addEventListener('keyup',   this.handleKeys.bind(this, false));
     window.addEventListener('keydown', this.handleKeys.bind(this, true));
     window.addEventListener('resize',  this.handleResize.bind(this, false));
-
+    console.log("llegaron los players",this.props.players);
     const context = this.refs.canvas.getContext('2d');
     this.setState({ context: context });
     this.startGame();
@@ -248,19 +251,23 @@ updateParticles(){
     })
 }
   updateAsteroids(){
-    
-    this.props.asteroids.map((a)=>{
-      if(a.owner==this.state.currentIDA)
-        {
-          // console.log('es Igual')
-          let aN = this.postMovAsteroid(a);
-          this.props.uAsteroid(aN,aN._id);
-          this.pintarAsteroide(aN.position.x,aN.positiony,aN.rotation,aN.radius,aN.vertices);
-        }else{
-          this.pintarAsteroide(a.position.x,a.positiony,a.rotation,a.radius,a.vertices);
-        }
-      
-    })
+
+    // //////// toca cambiar el map de toda esa mierda por un asteroide local :C
+    // let ast;
+    // //console.log("asteroides que llegan",this.props.asteroids);
+    // this.props.asteroids.map((a)=>{
+    //   if(a.owner==this.state.currentIDA)
+    // //    console.log("encontro dueño")
+    //     { ast=a;}
+    // });  
+    // let aN = this.postMovAsteroid(ast);
+    // this.props.uAsteroid(aN,aN._id);
+
+    //   this.props.asteroids.map((a)=>{
+    //     this.pintarAsteroide(a.position.x,a.positiony,a.rotation,a.radius,a.vertices);
+        
+    //   })
+
   }
 
 checkMoveShip(){
@@ -274,11 +281,12 @@ checkMoveShip(){
     if(this.state.keys.right){
       this.rotateShip('RIGHT');
     }
-    // if(state.keys.space && Date.now() - this.lastShot > 300){
-    //   const bullet = new Bullet({ship: this});
-    //   this.create(bullet, 'bullets');
-    //   this.lastShot = Date.now();
-    // }
+    if(this.state.keys.space && Date.now() - this.ownShip.lastShot > 300){
+      
+      // const bullet = new Bullet({ship: this});
+      // this.create(bullet, 'bullets');
+      this.ownShip.lastShot = Date.now();
+    }
   }
 checkMoveParticle(p){
     // Move
@@ -373,6 +381,20 @@ postMovShip(){
     else if(a.position.y < -a.radius) a.position.y = this.state.screen.height + a.radius;
 
     return a;
+  }
+
+  postMovBullet(b){
+     // Move
+    b.position.x += b.velocity.x;
+    b.position.y += b.velocity.y;
+
+    // Delete if it goes out of bounds
+    if ( b.position.x < 0
+      || b.position.y < 0
+      || b.position.x > state.screen.width
+      || b.position.y > state.screen.height ) {
+    this.delete = true;
+    }
   }
 
   gameOver(){
@@ -525,10 +547,29 @@ postMovShip(){
     context.stroke();
     context.restore();
   }
+  pintarBullet(x,y,r){
+    // Draw
+    const context = this.state.context;
+    context.save();
+    context.translate(x, y);
+    context.rotate(r * Math.PI / 180);
+    context.fillStyle = '#ef5350';
+    context.lineWidth = 0,5;
+    context.beginPath();
+    context.arc(0, 0, 2, 0, 2 * Math.PI);
+    context.closePath();
+    context.fill();
+    context.restore();
+  }
+    renderScores() {
+    return this.props.players.map((p) => (
+      <ScoreE key={p._id} player={p} />
+    ));
+  }
+  
 
   render() {
-    let endgame;
-    let message;
+    let endgame,message,list;
 
     if (this.state.currentScore <= 0) {
       message = '0 points  You Can Do It Better!';
@@ -550,12 +591,21 @@ postMovShip(){
         </div>
       )
     }
+    list= (
+      <span className="score top-score top-list">
+        <div className="top-list">
+          <ul>
+             {this.renderScores()}
+          </ul>
+        </div>
+      </span>
+    )
+
 
     return (
       <div>
         { endgame }
         <span className="score current-score" >Score: {this.state.currentScore}</span>
-        <span className="score top-score" >Top Score: {this.state.topScore}</span>
         <span className="controls" >
           Use [A][S][W][D] to MOVE<br/>
           Use [SPACE] to SHOOT
